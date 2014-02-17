@@ -18,6 +18,7 @@ static const DWORD MAX_KEY = 254;
 static const size_t array_size = BITNSLOTS(MAX_KEY);
 static char currently_down[array_size] = {};
 static char now_released[array_size] = {};
+static char denied_keys[array_size] = {};
 typedef unsigned char uchar;
 
 static HWND msgwnd;
@@ -32,6 +33,8 @@ static void print(char key_bitset[]) {
   printf("\n");
 }
 
+static BOOL valid_key(DWORD key) { return key >= 1 && key <= MAX_KEY; }
+
 LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
   if (nCode == HC_ACTION) {
     switch (wParam) {
@@ -41,12 +44,8 @@ LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     case WM_SYSKEYUP:
 
       PKBDLLHOOKSTRUCT p = (PKBDLLHOOKSTRUCT)lParam;
-      if (p->vkCode == VK_TAB) {
-        PostQuitMessage(0);
-        return 1;
-      }
 
-      if (p->vkCode < 1 || p->vkCode >= MAX_KEY) {
+      if (!valid_key(p->vkCode)) {
         break;
       }
 
@@ -62,15 +61,31 @@ LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
       } else {
         BITSET(currently_down, vk);
       }
+
+      if (BITTEST(denied_keys, vk)) {
+        return 1;
+      }
     }
   }
 
   return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+  for (int i = 1; i < argc; ++i) {
+    int val = atoi(argv[i]);
+    if (!valid_key(val)) {
+      fprintf(stderr, "argument %d isn't a valid vkey code: %s\n", i, argv[i]);
+      return 2;
+    }
+    BITSET(denied_keys, val);
+  }
   HINSTANCE hInst = GetModuleHandle(NULL);
   HHOOK hook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboardProc, hInst, 0);
+  if (NULL == hook) {
+    fprintf(stderr, "hooking failed\n");
+    return 3;
+  }
   msgwnd = CreateWindow(TEXT("STATIC"), TEXT("Glover window"), 0, 0, 0, 0, 0,
                         HWND_MESSAGE, 0, hInst, 0);
 
