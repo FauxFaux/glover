@@ -15,7 +15,9 @@
 // vkeys 1-254 inclusive
 // http://msdn.microsoft.com/en-us/library/windows/desktop/ms644967.aspx
 static const DWORD MAX_KEY = 254;
-static char currently_down[BITNSLOTS(MAX_KEY)] = {};
+static const size_t array_size = BITNSLOTS(MAX_KEY);
+static char currently_down[array_size] = {};
+static char now_released[array_size] = {};
 typedef unsigned char uchar;
 
 static HWND msgwnd;
@@ -59,13 +61,14 @@ LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
       uchar vk = p->vkCode;
 
       if (WM_KEYUP == wParam || WM_SYSKEYUP == wParam) {
-        BITCLEAR(currently_down, vk);
+        BITSET(now_released, vk);
+        if (0 == memcmp(currently_down, now_released, array_size)) {
+          print(currently_down);
+          memset(currently_down, 0, array_size);
+          memset(now_released, 0, array_size);
+        }
       } else {
         BITSET(currently_down, vk);
-      }
-
-      if (total_set(currently_down)) {
-        print(currently_down);
       }
     }
   }
