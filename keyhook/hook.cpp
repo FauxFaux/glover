@@ -25,10 +25,9 @@ static HWND msgwnd;
 
 static void print(char key_bitset[]) {
   for (uchar i = 1; i < MAX_KEY; ++i) {
-    if (!BITTEST(key_bitset, i)) {
-      continue;
+    if (BITTEST(key_bitset, i)) {
+      printf("%d ", i);
     }
-    printf("%d ", i);
   }
   printf("\n");
 }
