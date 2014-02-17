@@ -52,6 +52,11 @@ LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
       if (WM_KEYUP == wParam || WM_SYSKEYUP == wParam) {
         BITSET(now_released, vk);
+
+        for (size_t i = 0; i < array_size; ++i) {
+          now_released[i] &= currently_down[i];
+        }
+
         if (0 == memcmp(currently_down, now_released, array_size)) {
           print(currently_down);
           memset(currently_down, 0, array_size);
