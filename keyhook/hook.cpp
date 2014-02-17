@@ -3,6 +3,8 @@
 
 #pragma comment(lib, "user32.lib")
 
+static HWND msgwnd;
+
 LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
   if (nCode == HC_ACTION) {
     switch (wParam) {
@@ -12,6 +14,7 @@ LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     case WM_SYSKEYUP:
       PKBDLLHOOKSTRUCT p = (PKBDLLHOOKSTRUCT)lParam;
       if (p->vkCode == VK_TAB) {
+        PostQuitMessage(0);
         return 1;
       }
     }
@@ -23,7 +26,16 @@ LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 int main() {
   HINSTANCE hInst = GetModuleHandle(NULL);
   HHOOK hook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboardProc, hInst, 0);
-  MessageBox(NULL, "blocked", "blocker", MB_OK);
+  msgwnd = CreateWindow(TEXT("STATIC"), TEXT("Glover window"), 0, 0, 0, 0, 0,
+                             HWND_MESSAGE, 0, hInst, 0);
+
+  MSG msg;
+  BOOL ret;
+  while (0 != (ret = GetMessage(&msg, msgwnd, 0, 0))) {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+
   UnhookWindowsHookEx(hook);
-  return 0;
+  return msg.wParam;
 }
