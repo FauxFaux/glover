@@ -22,14 +22,6 @@ typedef unsigned char uchar;
 
 static HWND msgwnd;
 
-static unsigned short total_set(char key_bitset[]) {
-  unsigned short ret = 0;
-  for (uchar i = 1; i < MAX_KEY; ++i) {
-    ret += BITTEST(key_bitset, i);
-  }
-  return ret;
-}
-
 static void print(char key_bitset[]) {
   for (uchar i = 1; i < MAX_KEY; ++i) {
     if (!BITTEST(key_bitset, i)) {
