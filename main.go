@@ -23,17 +23,18 @@ func chordReleased(bytes *C.char) {
 }
 
 const (
-    LS = iota
+    _ = iota
+    LS
     LT
     LK
     LP
     LW
     LH
     LR
-    A
-    O
-    E
-    U
+    LA
+    LO
+    RE
+    RU
     RF
     RR
     RP
@@ -45,6 +46,31 @@ const (
     RD
     RZ
 )
+
+var wtbEnum = map[string]uint8 {
+    "LS": LS,
+    "LT": LT,
+    "LK": LK,
+    "LP": LP,
+    "LW": LW,
+    "LH": LH,
+    "LR": LR,
+    "LA": LA,
+    "LO": LO,
+    "RE": RE,
+    "RU": RU,
+    "RF": RF,
+    "RR": RR,
+    "RP": RP,
+    "RB": RB,
+    "RL": RL,
+    "RG": RG,
+    "RT": RT,
+    "RS": RS,
+    "RD": RD,
+    "RZ": RZ,
+}
+
 
 func main() {
     go C.setup();
@@ -70,13 +96,18 @@ func main() {
         log.Fatal("couldn't unmarshal: ", err)
     }
 
-    var keyMap [255]string
+    var keyMap [255]uint8
     for key, value := range c.Keys {
         val, err := strconv.Atoi(key)
         if nil != err {
             log.Fatal("vkeys must be integers: ", err)
         }
-        keyMap[val] = value
+        var x = wtbEnum[value]
+        if 0 == x {
+            log.Fatalf("I can't parse '%s' as a steno key", value)
+        }
+
+        keyMap[val] = x
     }
 
     for {
