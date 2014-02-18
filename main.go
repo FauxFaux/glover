@@ -22,6 +22,30 @@ func chordReleased(bytes *C.char) {
     output <- C.GoString(bytes)
 }
 
+const (
+    LS = iota
+    LT
+    LK
+    LP
+    LW
+    LH
+    LR
+    A
+    O
+    E
+    U
+    RF
+    RR
+    RP
+    RB
+    RL
+    RG
+    RT
+    RS
+    RD
+    RZ
+)
+
 func main() {
     go C.setup();
     fi, err := os.Open("config.json")
