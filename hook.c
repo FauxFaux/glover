@@ -1,6 +1,10 @@
 #include <windows.h>
 #include <stdio.h>
 #include <limits.h>
+#ifdef FOR_GO
+#   include "_cgo_export.h"
+#else
+#endif
 
 #pragma comment(lib, "user32.lib")
 
@@ -12,15 +16,13 @@
 #define BITTEST(a, b) ((a)[BITSLOT(b)] & BITMASK(b))
 #define BITNSLOTS(nb) ((nb + CHAR_BIT - 1) / CHAR_BIT)
 
-extern "C" {
-    int setup();
-    int parse_denied(int argc, char *argv[]);
-}
+int setup();
+int parse_denied(int argc, char *argv[]);
 
 // vkeys 1-254 inclusive
 // http://msdn.microsoft.com/en-us/library/windows/desktop/ms644967.aspx
 static const DWORD MAX_KEY = 254;
-static const size_t array_size = BITNSLOTS(MAX_KEY);
+#define array_size 32
 static char currently_down[array_size] = {};
 static char now_released[array_size] = {};
 static char denied_keys[array_size] = {};
@@ -29,12 +31,15 @@ typedef unsigned char uchar;
 static HWND msgwnd;
 
 static void print(char key_bitset[]) {
+  char output[MAX_KEY];
+  int pos;
   for (uchar i = 1; i < MAX_KEY; ++i) {
     if (BITTEST(key_bitset, i)) {
-      printf("%d ", i);
+      output[pos++] = i;
     }
   }
-  printf("\n");
+  output[pos] = 0;
+  chordReleased(output);
 }
 
 static BOOL valid_key(DWORD key) { return key >= 1 && key <= MAX_KEY; }
@@ -45,7 +50,7 @@ LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     case WM_KEYUP:
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
-    case WM_SYSKEYUP:
+    case WM_SYSKEYUP: {
 
       PKBDLLHOOKSTRUCT p = (PKBDLLHOOKSTRUCT)lParam;
 
@@ -74,6 +79,7 @@ LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
       if (BITTEST(denied_keys, vk)) {
         return 1;
       }
+    }
     }
   }
 
@@ -111,7 +117,7 @@ int setup() {
   UnhookWindowsHookEx(hook);
 }
 
-#ifndef NO_MAIN
+#ifndef FOR_GO
 int main(int argc, char *argv[]) {
   if (parse_denied(argc, argv))
       return 2;
