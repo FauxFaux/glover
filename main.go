@@ -166,11 +166,12 @@ func main() {
 		req := <-output
 		// this cannot use range as it is not utf-8
 		for i := 0; i < len(req); i++ {
-			var sk StenoKey = keyMap[VKey(req[i])]
+			var vk VKey = VKey(req[i])
+			var sk StenoKey = keyMap[vk]
 			if 0 == sk {
 				continue
 			}
-			fmt.Printf("%c: %s;   ", req[i], fromEnum[sk])
+			fmt.Printf("%c: %s;   ", vk, fromEnum[sk])
 		}
 		fmt.Println()
 	}
