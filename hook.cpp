@@ -12,6 +12,11 @@
 #define BITTEST(a, b) ((a)[BITSLOT(b)] & BITMASK(b))
 #define BITNSLOTS(nb) ((nb + CHAR_BIT - 1) / CHAR_BIT)
 
+extern "C" {
+    int setup();
+    int parse_denied(int argc, char *argv[]);
+}
+
 // vkeys 1-254 inclusive
 // http://msdn.microsoft.com/en-us/library/windows/desktop/ms644967.aspx
 static const DWORD MAX_KEY = 254;
@@ -75,7 +80,7 @@ LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
   return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
-int main(int argc, char *argv[]) {
+int parse_denied(int argc, char *argv[]) {
   for (int i = 1; i < argc; ++i) {
     int val = atoi(argv[i]);
     if (!valid_key(val)) {
@@ -84,6 +89,9 @@ int main(int argc, char *argv[]) {
     }
     BITSET(denied_keys, val);
   }
+}
+
+int setup() {
   HINSTANCE hInst = GetModuleHandle(NULL);
   HHOOK hook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboardProc, hInst, 0);
   if (NULL == hook) {
@@ -101,5 +109,13 @@ int main(int argc, char *argv[]) {
   }
 
   UnhookWindowsHookEx(hook);
-  return msg.wParam;
 }
+
+#ifndef NO_MAIN
+int main(int argc, char *argv[]) {
+  if (parse_denied(argc, argv))
+      return 2;
+  if (setup())
+      return 3;
+}
+#endif
