@@ -127,26 +127,32 @@ func keyNameToVKey(in string) VKey {
 	return 0
 }
 
-func main() {
-	go C.setup()
-	fi, err := os.Open("config.json")
+func openJson(name string) *json.Decoder {
+	fi, err := os.Open(name + ".json")
 	if nil != err {
-		fi2, err2 := os.Open("config.json.template")
+		fi2, err2 := os.Open(name + ".json.template")
 		if nil != err2 {
-			log.Fatal("no config.json: ", err, ", nor config.json.template: ", err2)
+			log.Fatal("no " + name + ".json: ", err, ", nor " + name + ".json.template: ", err2)
 		}
 		fi = fi2
 	}
 
+	defer fi.Close()
+
 	r := bufio.NewReader(fi)
-	dec := json.NewDecoder(r)
+	return json.NewDecoder(r)
+}
+
+func main() {
+	go C.setup()
+	dec := openJson("config")
 
 	type Config struct {
 		Keys map[string]string
 	}
 
 	var c Config
-	err = dec.Decode(&c)
+	err := dec.Decode(&c)
 	if nil != err {
 		log.Fatal("couldn't unmarshal: ", err)
 	}
