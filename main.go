@@ -204,7 +204,7 @@ func parseChord(s string) (ret Chord, err error) {
 		if nil != err {
 			return 0, fmt.Errorf("Can't read '%c' in '%s': %s", s[i], s, err)
 		}
-		ret |= (1 << ch)
+		ret |= ch
 	}
 	return ret, nil
 }
@@ -242,6 +242,8 @@ func main() {
 		}
 	}
 
+	fmt.Println(len(chords), "chords loaded")
+
 	var keyMap = map[VKey]StenoKey{}
 	for key, value := range c.Keys {
 		var val VKey = keyNameToVKey(key)
@@ -253,18 +255,28 @@ func main() {
 		keyMap[val] = x
 	}
 
+	for k, v := range chords {
+		if v == "have" {
+			fmt.Printf("have %b\n", k)
+		}
+	}
+
 	for {
 		req := <-output
 		// this cannot use range as it is not utf-8
+		var c Chord
 		for i := 0; i < len(req); i++ {
 			var vk VKey = VKey(req[i])
 			var sk StenoKey = keyMap[vk]
 			if 0 == sk {
 				continue
 			}
-			fmt.Printf("%c: %s;   ", vk, fromEnum[sk])
+			c |= h(sk)
+//			fmt.Printf("%c: %s;   ", vk, fromEnum[sk])
 		}
-		fmt.Println()
+		if 0 != c {
+			fmt.Printf("%b: %s\n", c, chords[c])
+		}
 	}
 }
 
