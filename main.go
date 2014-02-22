@@ -24,6 +24,7 @@ func chordReleased(bytes *C.char) {
 type StenoKey uint8
 type QwertyKey uint8
 type VKey uint8
+type Chord uint32
 
 const (
 	_ StenoKey = iota
@@ -52,7 +53,7 @@ const (
 	STAR
 )
 
-var toEnum = map[string]StenoKey{
+var toEnum = map[string]StenoKey {
 	"S-": LS,
 	"T-": LT,
 	"K-": LK,
@@ -76,6 +77,20 @@ var toEnum = map[string]StenoKey{
 	"-Z": RZ,
 	"#":  NUMBER,
 	"*":  STAR,
+}
+
+var numResolve = map[byte]StenoKey {
+	'1': LS,
+	'2': LT,
+	'3': LP,
+	'4': LH,
+	'5': LA,
+	'6': RF,
+	'7': RP,
+	'8': RL,
+	'9': RT,
+	'0': RD,
+	'#': NUMBER,
 }
 
 func reverse(in map[string]StenoKey) map[StenoKey]string {
@@ -127,7 +142,7 @@ func keyNameToVKey(in string) VKey {
 	return 0
 }
 
-func openJson(name string) *json.Decoder {
+func openJson(name string) (dec *json.Decoder, fi *os.File) {
 	fi, err := os.Open(name + ".json")
 	if nil != err {
 		fi2, err2 := os.Open(name + ".json.template")
@@ -137,15 +152,67 @@ func openJson(name string) *json.Decoder {
 		fi = fi2
 	}
 
-	defer fi.Close()
-
 	r := bufio.NewReader(fi)
-	return json.NewDecoder(r)
+	return json.NewDecoder(r), fi
+}
+
+func h(s StenoKey) Chord {
+	return 1 << s;
+}
+
+func splitChar(c byte, passedMid bool) (ret Chord, newMid bool, err error) {
+	switch c {
+		case 'A':
+			return h(LA), true, nil
+		case 'O':
+			return h(LO), true, nil
+		case 'E':
+			return h(RE), true, nil
+		case 'U':
+			return h(RU), true, nil
+		case '*':
+			return h(STAR), true, nil
+		case '-':
+			return 0, true, nil
+	}
+
+	foundNum := numResolve[c]
+	if 0 != foundNum {
+		return h(NUMBER) | h(foundNum), true, nil
+	}
+
+	var encoding string
+	if passedMid {
+		encoding = fmt.Sprintf("-%c", c)
+	} else {
+		encoding = fmt.Sprintf("%c-", c)
+	}
+
+	found := toEnum[encoding]
+	if 0 != found {
+		return h(found), passedMid, nil
+	}
+
+	return 0, passedMid, fmt.Errorf("not happy with '%c' %t", c, passedMid)
+}
+
+func parseChord(s string) (ret Chord, err error) {
+	passedMid := false
+	for i := 0; i < len(s); i++ {
+		ch, newMid, err := splitChar(s[i], passedMid)
+		passedMid = newMid
+		if nil != err {
+			return 0, fmt.Errorf("Can't read '%c' in '%s': %s", s[i], s, err)
+		}
+		ret |= (1 << ch)
+	}
+	return ret, nil
 }
 
 func main() {
 	go C.setup()
-	dec := openJson("config")
+	dec, fi := openJson("config")
+	defer fi.Close()
 
 	type Config struct {
 		Keys map[string]string
@@ -155,6 +222,24 @@ func main() {
 	err := dec.Decode(&c)
 	if nil != err {
 		log.Fatal("couldn't unmarshal: ", err)
+	}
+
+	dictJ, fi := openJson("dict")
+	defer fi.Close()
+	var dict = map[string]string {}
+	err = dictJ.Decode(&dict)
+	if nil != err {
+		log.Fatal("couldn't read dictionary: ", err)
+	}
+
+	var chords = map[Chord]string {}
+	for k, v := range dict {
+		ch, err := parseChord(k)
+		if nil != err {
+			log.Println(err)
+		} else {
+			chords[ch] = v
+		}
 	}
 
 	var keyMap = map[VKey]StenoKey{}
