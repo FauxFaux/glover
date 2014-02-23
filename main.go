@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 var output = make(chan string, 100)
@@ -21,10 +22,13 @@ func chordReleased(bytes *C.char) {
 	output <- C.GoString(bytes)
 }
 
+const sequenceLength = 10
+
 type StenoKey uint8
 type QwertyKey uint8
 type VKey uint8
 type Chord uint32
+type Sequence [sequenceLength]Chord
 
 const (
 	_ StenoKey = iota
@@ -232,14 +236,25 @@ func main() {
 		log.Fatal("couldn't read dictionary: ", err)
 	}
 
-	var chords = map[Chord]string {}
+	var chords = map[Sequence]string {}
+dicter:
 	for k, v := range dict {
-		ch, err := parseChord(k)
-		if nil != err {
-			log.Println(err)
-		} else {
-			chords[ch] = v
+		splut := strings.Split(k, "/")
+		if len(splut) > sequenceLength {
+			log.Println("can't cope with", k, ":", v, "as it's too long")
+			continue
 		}
+		chs := Sequence {}
+		for i, part := range splut {
+			ch, err := parseChord(part)
+			if nil != err {
+				log.Println(err)
+				continue dicter
+			} else {
+				chs[i] = ch
+			}
+		}
+		chords[chs] = v
 	}
 
 	fmt.Println(len(chords), "chords loaded")
@@ -275,7 +290,7 @@ func main() {
 //			fmt.Printf("%c: %s;   ", vk, fromEnum[sk])
 		}
 		if 0 != c {
-			fmt.Printf("%b: %s\n", c, chords[c])
+			fmt.Printf("%b: %s\n", c, chords[Sequence{c}])
 		}
 	}
 }
