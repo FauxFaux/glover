@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"container/ring"
 )
 
 var output = make(chan string, 100)
@@ -283,7 +284,9 @@ func render(ch Chord) string {
 	return s
 }
 
-func lookup(chords Sequence, ch Chord) string {
+func lookup(chords Sequence, r *ring.Ring) string {
+	r = r.Prev()
+	var ch Chord = r.Value.(Chord)
 	seq := chords.Predecessors[ch]
 	if nil != seq && "" != seq.Value {
 		return seq.Value
@@ -334,6 +337,7 @@ func main() {
 		}
 	}
 
+	prev := ring.New(20)
 	for {
 		req := <-output
 		// this cannot use range as it is not utf-8
@@ -348,7 +352,12 @@ func main() {
 			//			fmt.Printf("%c: %s;   ", vk, fromEnum[sk])
 		}
 		if 0 != c {
-			fmt.Printf("%b: %s\n", c, lookup(chords, c))
+			prev.Value = c
+			prev = prev.Next()
+			fmt.Printf("%b: %s %v\n", c, lookup(chords, prev))
+			prev.Do(func(x interface{}) {
+				fmt.Printf("%b, ", x)
+			})
 		}
 	}
 }
