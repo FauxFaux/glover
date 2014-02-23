@@ -215,30 +215,8 @@ func parseChord(s string) (ret Chord, err error) {
 	return ret, nil
 }
 
-func main() {
-	go C.setup()
-	dec, fi := openJson("config")
-	defer fi.Close()
-
-	type Config struct {
-		Keys map[string]string
-	}
-
-	var c Config
-	err := dec.Decode(&c)
-	if nil != err {
-		log.Fatal("couldn't unmarshal: ", err)
-	}
-
-	dictJ, fi := openJson("dict")
-	defer fi.Close()
-	var dict = map[string]string {}
-	err = dictJ.Decode(&dict)
-	if nil != err {
-		log.Fatal("couldn't read dictionary: ", err)
-	}
-
-	var chords = Sequence { Predecessors: map[Chord]*Sequence {} }
+func load(dict map[string]string) (chords Sequence) {
+	chords = Sequence { Predecessors: map[Chord]*Sequence {} }
 	loaded := 0
 dicter:
 	for k, v := range dict {
@@ -263,6 +241,33 @@ dicter:
 	}
 
 	fmt.Println(loaded, "chords loaded")
+	return
+}
+
+func main() {
+	go C.setup()
+	dec, fi := openJson("config")
+	defer fi.Close()
+
+	type Config struct {
+		Keys map[string]string
+	}
+
+	var c Config
+	err := dec.Decode(&c)
+	if nil != err {
+		log.Fatal("couldn't unmarshal: ", err)
+	}
+
+	dictJ, fi := openJson("dict")
+	defer fi.Close()
+	var dict = map[string]string {}
+	err = dictJ.Decode(&dict)
+	if nil != err {
+		log.Fatal("couldn't read dictionary: ", err)
+	}
+
+	chords := load(dict)
 
 	var keyMap = map[VKey]StenoKey{}
 	for key, value := range c.Keys {
