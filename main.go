@@ -28,7 +28,7 @@ type VKey uint8
 type Chord uint32
 
 type Sequence struct {
-	Value string
+	Value        string
 	Predecessors map[Chord]*Sequence
 }
 
@@ -59,7 +59,7 @@ const (
 	STAR
 )
 
-var toEnum = map[string]StenoKey {
+var toEnum = map[string]StenoKey{
 	"S-": LS,
 	"T-": LT,
 	"K-": LK,
@@ -85,7 +85,33 @@ var toEnum = map[string]StenoKey {
 	"*":  STAR,
 }
 
-var numResolve = map[byte]StenoKey {
+var toKeyName = map[StenoKey]string{
+	LS:     "S",
+	LT:     "T",
+	LK:     "K",
+	LP:     "P",
+	LW:     "W",
+	LH:     "H",
+	LR:     "R",
+	LA:     "A",
+	LO:     "O",
+	RE:     "E",
+	RU:     "U",
+	RF:     "F",
+	RR:     "R",
+	RP:     "P",
+	RB:     "B",
+	RL:     "L",
+	RG:     "G",
+	RT:     "T",
+	RS:     "S",
+	RD:     "D",
+	RZ:     "Z",
+	NUMBER: "#",
+	STAR:   "*",
+}
+
+var numResolve = map[byte]StenoKey{
 	'1': LS,
 	'2': LT,
 	'3': LP,
@@ -153,7 +179,7 @@ func openJson(name string) (dec *json.Decoder, fi *os.File) {
 	if nil != err {
 		fi2, err2 := os.Open(name + ".json.template")
 		if nil != err2 {
-			log.Fatal("no " + name + ".json: ", err, ", nor " + name + ".json.template: ", err2)
+			log.Fatal("no "+name+".json: ", err, ", nor "+name+".json.template: ", err2)
 		}
 		fi = fi2
 	}
@@ -163,23 +189,23 @@ func openJson(name string) (dec *json.Decoder, fi *os.File) {
 }
 
 func h(s StenoKey) Chord {
-	return 1 << s;
+	return 1 << s
 }
 
 func splitChar(c byte, passedMid bool) (ret Chord, newMid bool, err error) {
 	switch c {
-		case 'A':
-			return h(LA), true, nil
-		case 'O':
-			return h(LO), true, nil
-		case 'E':
-			return h(RE), true, nil
-		case 'U':
-			return h(RU), true, nil
-		case '*':
-			return h(STAR), true, nil
-		case '-':
-			return 0, true, nil
+	case 'A':
+		return h(LA), true, nil
+	case 'O':
+		return h(LO), true, nil
+	case 'E':
+		return h(RE), true, nil
+	case 'U':
+		return h(RU), true, nil
+	case '*':
+		return h(STAR), true, nil
+	case '-':
+		return 0, true, nil
 	}
 
 	foundNum := numResolve[c]
@@ -216,21 +242,21 @@ func parseChord(s string) (ret Chord, err error) {
 }
 
 func load(dict map[string]string) (chords Sequence) {
-	chords = Sequence { Predecessors: map[Chord]*Sequence {} }
+	chords = Sequence{Predecessors: map[Chord]*Sequence{}}
 	loaded := 0
 dicter:
 	for k, v := range dict {
 		splut := strings.Split(k, "/")
 		var seq *Sequence = &chords
-		for i := len(splut) - 1;  i >= 0; i-- {
+		for i := len(splut) - 1; i >= 0; i-- {
 			ch, err := parseChord(splut[i])
 			if nil != err {
 				log.Println(err)
 				continue dicter
 			} else {
 				var newVal *Sequence = seq.Predecessors[ch]
-				if nil == newVal{
-					newVal = &Sequence { Predecessors: map[Chord]*Sequence {} }
+				if nil == newVal {
+					newVal = &Sequence{Predecessors: map[Chord]*Sequence{}}
 				}
 				seq.Predecessors[ch] = newVal
 				seq = newVal
@@ -242,6 +268,25 @@ dicter:
 
 	fmt.Println(loaded, "chords loaded")
 	return
+}
+
+func render(ch Chord) string {
+	s := ""
+	for i := LS; i <= STAR; i++ {
+		if 0 != (ch & h(i)) {
+			s += toKeyName[i]
+		}
+	}
+	return s
+}
+
+func lookup(chords Sequence, ch Chord) string {
+	seq := chords.Predecessors[ch]
+	if nil != seq && "" != seq.Value {
+		return seq.Value
+	}
+
+	return render(ch)
 }
 
 func main() {
@@ -261,7 +306,7 @@ func main() {
 
 	dictJ, fi := openJson("dict")
 	defer fi.Close()
-	var dict = map[string]string {}
+	var dict = map[string]string{}
 	err = dictJ.Decode(&dict)
 	if nil != err {
 		log.Fatal("couldn't read dictionary: ", err)
@@ -297,10 +342,10 @@ func main() {
 				continue
 			}
 			c |= h(sk)
-//			fmt.Printf("%c: %s;   ", vk, fromEnum[sk])
+			//			fmt.Printf("%c: %s;   ", vk, fromEnum[sk])
 		}
 		if 0 != c {
-			fmt.Printf("%b: %s\n", c, chords.Predecessors[c].Value)
+			fmt.Printf("%b: %s\n", c, lookup(chords, c))
 		}
 	}
 }
