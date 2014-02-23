@@ -274,6 +274,9 @@ func render(ch Chord) string {
 	s := ""
 	for i := LS; i <= STAR; i++ {
 		if 0 != (ch & h(i)) {
+			if "" == s && i >= RF {
+				s += "-"
+			}
 			s += toKeyName[i]
 		}
 	}
