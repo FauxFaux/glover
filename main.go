@@ -22,13 +22,15 @@ func chordReleased(bytes *C.char) {
 	output <- C.GoString(bytes)
 }
 
-const sequenceLength = 10
-
 type StenoKey uint8
 type QwertyKey uint8
 type VKey uint8
 type Chord uint32
-type Sequence [sequenceLength]Chord
+
+type Sequence struct {
+	Value *string
+	Predecessors map[Chord]*Sequence
+}
 
 const (
 	_ StenoKey = iota
@@ -236,28 +238,31 @@ func main() {
 		log.Fatal("couldn't read dictionary: ", err)
 	}
 
-	var chords = map[Sequence]string {}
+	var chords = Sequence { Predecessors: map[Chord]*Sequence {} }
+	loaded := 0
 dicter:
 	for k, v := range dict {
 		splut := strings.Split(k, "/")
-		if len(splut) > sequenceLength {
-			log.Println("can't cope with", k, ":", v, "as it's too long")
-			continue
-		}
-		chs := Sequence {}
-		for i, part := range splut {
-			ch, err := parseChord(part)
+		var seq *Sequence = &chords
+		for i := len(splut) - 1;  i >= 0; i-- {
+			ch, err := parseChord(splut[i])
 			if nil != err {
 				log.Println(err)
 				continue dicter
 			} else {
-				chs[i] = ch
+				newVal := seq.Predecessors[ch]
+				if nil == newVal{
+					newVal = &Sequence { Predecessors: map[Chord]*Sequence {} }
+				}
+				seq.Predecessors[ch] = newVal
+				seq = newVal
 			}
 		}
-		chords[chs] = v
+		seq.Value = &v
+		loaded++
 	}
 
-	fmt.Println(len(chords), "chords loaded")
+	fmt.Println(loaded, "chords loaded")
 
 	var keyMap = map[VKey]StenoKey{}
 	for key, value := range c.Keys {
@@ -270,8 +275,8 @@ dicter:
 		keyMap[val] = x
 	}
 
-	for k, v := range chords {
-		if v == "have" {
+	for k, v := range chords.Predecessors {
+		if nil != v.Value && *v.Value == "have" {
 			fmt.Printf("have %b\n", k)
 		}
 	}
@@ -290,7 +295,7 @@ dicter:
 //			fmt.Printf("%c: %s;   ", vk, fromEnum[sk])
 		}
 		if 0 != c {
-			fmt.Printf("%b: %s\n", c, chords[Sequence{c}])
+			fmt.Printf("%b: %s\n", c, *chords.Predecessors[c].Value)
 		}
 	}
 }
