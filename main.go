@@ -8,12 +8,12 @@ import "C"
 
 import (
 	"bufio"
+	"container/ring"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"strings"
-	"container/ring"
 )
 
 var output = make(chan string, 100)

@@ -21,14 +21,14 @@ func dump(s Sequence, depth int) {
 	}
 }
 
-func TestLoad(t *testing.T) {
-	one := map[string]string{
-		"SR":      "have",
-		"KWRES":   "yes",
-		"SEP/RAT": "separate",
-		"RAT":     "rat",
-	}
+var one = map[string]string{
+	"SR":      "have",
+	"KWRES":   "yes",
+	"SEP/RAT": "separate",
+	"RAT":     "rat",
+}
 
+func TestLoad(t *testing.T) {
 	out := load(one)
 
 	dump(out, 0)
@@ -43,3 +43,5 @@ func TestLoad(t *testing.T) {
 	assertEquals(t, "separate", out.Predecessors[RAT].Predecessors[SEP].Value)
 	assertEquals(t, "rat", out.Predecessors[RAT].Value)
 }
+
+/* vim: set noexpandtab: */
