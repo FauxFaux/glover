@@ -28,7 +28,7 @@ type VKey uint8
 type Chord uint32
 
 type Sequence struct {
-	Value *string
+	Value string
 	Predecessors map[Chord]*Sequence
 }
 
@@ -228,7 +228,7 @@ dicter:
 				log.Println(err)
 				continue dicter
 			} else {
-				newVal := seq.Predecessors[ch]
+				var newVal *Sequence = seq.Predecessors[ch]
 				if nil == newVal{
 					newVal = &Sequence { Predecessors: map[Chord]*Sequence {} }
 				}
@@ -236,7 +236,7 @@ dicter:
 				seq = newVal
 			}
 		}
-		seq.Value = &v
+		seq.Value = v
 		loaded++
 	}
 
@@ -281,7 +281,7 @@ func main() {
 	}
 
 	for k, v := range chords.Predecessors {
-		if nil != v.Value && *v.Value == "have" {
+		if v.Value == "have" {
 			fmt.Printf("have %b\n", k)
 		}
 	}
@@ -300,7 +300,7 @@ func main() {
 //			fmt.Printf("%c: %s;   ", vk, fromEnum[sk])
 		}
 		if 0 != c {
-			fmt.Printf("%b: %s\n", c, *chords.Predecessors[c].Value)
+			fmt.Printf("%b: %s\n", c, chords.Predecessors[c].Value)
 		}
 	}
 }
