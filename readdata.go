@@ -31,6 +31,20 @@ var toEnum = map[string]StenoKey{
 	"*":  STAR,
 }
 
+var numResolve = map[byte]StenoKey{
+	'1': LS,
+	'2': LT,
+	'3': LP,
+	'4': LH,
+	'5': LA,
+	'6': RF,
+	'7': RP,
+	'8': RL,
+	'9': RT,
+	'0': RD,
+	'#': NUMBER,
+}
+
 func h(s StenoKey) Chord {
 	return 1 << s
 }
@@ -84,6 +98,33 @@ func parseChord(s string) (ret Chord, err error) {
 	return ret, nil
 }
 
+func keyNameToVKey(in string) VKey {
+	var from QwertyKey = QwertyKey(in[0])
+	if from >= 'a' && from <= 'z' {
+		return VKey(from - 'a' + 65)
+	}
+
+	if from >= '0' && from <= '9' {
+		return VKey(from - '0' + 0x30)
+	}
+
+	switch from {
+	case ';':
+		return 0xba
+	case '[':
+		return 0xdb
+	case ']':
+		return 0xdd
+	case '-':
+		return 0xbd
+	case '\'':
+		return 0xde
+	}
+
+	log.Fatalf("don't understand '%c' as a VKey", from)
+	return 0
+}
+
 func readKeys(keys map[string]string) map[VKey]StenoKey {
 	var keyMap = map[VKey]StenoKey{}
 	for key, value := range keys {
@@ -97,3 +138,22 @@ func readKeys(keys map[string]string) map[VKey]StenoKey {
 	}
 	return keyMap
 }
+
+func readKeyMap(name string) map[VKey]StenoKey {
+	dec, fi := openJson(name)
+	defer fi.Close()
+
+	type Config struct {
+		Keys map[string]string
+	}
+
+	var c Config
+	err := dec.Decode(&c)
+	if nil != err {
+		log.Fatal("couldn't unmarshal: ", err)
+	}
+
+	return readKeys(c.Keys)
+}
+
+/* vim: set noexpandtab: */
