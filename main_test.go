@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/ring"
 	"fmt"
 	"testing"
 )
@@ -28,20 +29,34 @@ var one = map[string]string{
 	"RAT":     "rat",
 }
 
+const SR = Chord(128 + 2)
+const KWRES = Chord(525480)
+const RAT = Chord(262528)
+const SEP = Chord(17410)
+
 func TestLoad(t *testing.T) {
 	out := load(one)
 
 	dump(out, 0)
 
-	SR := Chord(128 + 2)
-	KWRES := Chord(525480)
-	RAT := Chord(262528)
-	SEP := Chord(17410)
-
 	assertEquals(t, "have", out.Predecessors[SR].Value)
 	assertEquals(t, "yes", out.Predecessors[KWRES].Value)
 	assertEquals(t, "separate", out.Predecessors[RAT].Predecessors[SEP].Value)
 	assertEquals(t, "rat", out.Predecessors[RAT].Value)
+}
+
+func TestLookup(t *testing.T) {
+	out := load(one)
+	r := ring.New(5)
+	r.Value = SR
+	r = r.Next()
+	assertEquals(t, "have", lookup(out, r))
+	r.Value = RAT
+	r = r.Next()
+	assertEquals(t, "rat", lookup(out, r))
+	r.Value = SEP
+	r = r.Next()
+	assertEquals(t, "SEP", lookup(out, r))
 }
 
 /* vim: set noexpandtab: */
