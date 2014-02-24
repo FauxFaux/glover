@@ -286,22 +286,25 @@ func render(ch Chord) string {
 
 func lookup(chords Sequence, r *ring.Ring) (prop string) {
 	r = r.Prev()
+
+	// if there's no more inputs in the buffer,
+	// and we got here, this must be what we want
+	if nil == r.Value {
+		return chords.Value
+	}
 	var ch Chord = r.Value.(Chord)
-	seq := chords.Predecessors[ch]
-	r = r.Prev()
-	if nil != seq {
-		prop = seq.Value
-		if nil != r.Value {
-			var ch2 Chord = r.Value.(Chord)
-			if nil != seq.Predecessors[ch2] {
-				prop = seq.Predecessors[ch2].Value
-			}
-		}
+
+	// if we can go deeper, we should
+	cand := chords.Predecessors[ch]
+	if nil != cand {
+		return lookup(*cand, r)
 	}
 
-	if "" != prop {
-		return
+	// if we can't go deeper, and we have something, it's right
+	if "" != chords.Value {
+		return chords.Value
 	}
+
 	return render(ch)
 }
 
