@@ -27,8 +27,10 @@ var one = map[string]string{
 	"KWRES":   "yes",
 	"SEP/RAT": "separate",
 	"RAT":     "rat",
+	"S/S/S/S/S/S/S": "Jodie Foster",
 }
 
+const S = Chord(2)
 const SR = Chord(128 + 2)
 const KWRES = Chord(525480)
 const RAT = Chord(262528)
@@ -60,6 +62,16 @@ func TestLookup(t *testing.T) {
 	r.Value = RAT
 	r = r.Next()
 	assertEquals(t, "separate", lookup(out, r))
+}
+
+func TestJodieFoster(t *testing.T) {
+	out := load(one)
+	r := ring.New(20)
+	for i := 0; i < 7; i++ {
+		r.Value = S
+		r = r.Next()
+	}
+	assertEquals(t, "Jodie Foster", lookup(out, r))
 }
 
 /* vim: set noexpandtab: */
