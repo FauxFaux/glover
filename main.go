@@ -367,10 +367,12 @@ func main() {
 		if 0 != c {
 			prev.Value = c
 			prev = prev.Next()
-			fmt.Printf("%b: %s %v\n", c, lookup(chords, prev))
-			prev.Do(func(x interface{}) {
-				fmt.Printf("%b, ", x)
-			})
+			fmt.Printf("%b: %s\n", c, lookup(chords, prev))
+			if false {
+				prev.Do(func(x interface{}) {
+					fmt.Printf("%b, ", x)
+				})
+			}
 		}
 	}
 }
