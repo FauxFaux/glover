@@ -57,6 +57,9 @@ func TestLookup(t *testing.T) {
 	r.Value = SEP
 	r = r.Next()
 	assertEquals(t, "SEP", lookup(out, r))
+	r.Value = RAT
+	r = r.Next()
+	assertEquals(t, "separate", lookup(out, r))
 }
 
 /* vim: set noexpandtab: */

@@ -284,14 +284,24 @@ func render(ch Chord) string {
 	return s
 }
 
-func lookup(chords Sequence, r *ring.Ring) string {
+func lookup(chords Sequence, r *ring.Ring) (prop string) {
 	r = r.Prev()
 	var ch Chord = r.Value.(Chord)
 	seq := chords.Predecessors[ch]
-	if nil != seq && "" != seq.Value {
-		return seq.Value
+	r = r.Prev()
+	if nil != seq {
+		prop = seq.Value
+		if nil != r.Value {
+			var ch2 Chord = r.Value.(Chord)
+			if nil != seq.Predecessors[ch2] {
+				prop = seq.Predecessors[ch2].Value
+			}
+		}
 	}
 
+	if "" != prop {
+		return
+	}
 	return render(ch)
 }
 
