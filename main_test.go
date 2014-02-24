@@ -23,10 +23,10 @@ func dump(s Sequence, depth int) {
 }
 
 var one = map[string]string{
-	"SR":      "have",
-	"KWRES":   "yes",
-	"SEP/RAT": "separate",
-	"RAT":     "rat",
+	"SR":            "have",
+	"KWRES":         "yes",
+	"SEP/RAT":       "separate",
+	"RAT":           "rat",
 	"S/S/S/S/S/S/S": "Jodie Foster",
 }
 
