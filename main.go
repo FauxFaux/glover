@@ -69,7 +69,7 @@ func vkeyToChar(in VKey) QwertyKey {
 
 func main() {
 	go C.setup()
-	
+
 	keyMap := readKeyMap("config")
 	chords := readDict("dict")
 

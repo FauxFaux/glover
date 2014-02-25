@@ -22,7 +22,6 @@ func assertIEquals(t *testing.T, expected, actual int) {
 	t.Fatalf("'%d' must equal '%d'", actual, expected)
 }
 
-
 func dump(s Sequence, depth int) {
 	fmt.Println(s.Value)
 	for k, v := range s.Predecessors {

@@ -105,7 +105,7 @@ func lookup(chords Sequence, r *ring.Ring, depth int) (string, int) {
 	// if we can go deeper, we should
 	cand := chords.Predecessors[ch]
 	if nil != cand {
-		return lookup(*cand, r, depth + 1)
+		return lookup(*cand, r, depth+1)
 	}
 
 	// if we can't go deeper, and we have something, it's right
