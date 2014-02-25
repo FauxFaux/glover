@@ -73,7 +73,7 @@ func main() {
 	keyMap := readKeyMap("config")
 	chords := readDict("dict")
 
-	prev := ring.New(20)
+	prevChords := ring.New(20)
 	for {
 		req := <-output
 		// this cannot use range as it is not utf-8
@@ -86,17 +86,13 @@ func main() {
 			}
 			c |= h(sk)
 		}
-		if 0 != c {
-			prev.Value = c
-			prev = prev.Next()
-			res, kill := lookup(chords, prev, -1)
-			fmt.Printf("%s: %s (%d)\n", render(c), res, kill)
-			if false {
-				prev.Do(func(x interface{}) {
-					fmt.Printf("%b, ", x)
-				})
-			}
+		if 0 == c {
+			continue
 		}
+		prevChords.Value = c
+		prevChords = prevChords.Next()
+		res, kill := lookup(chords, prevChords, -1)
+		fmt.Printf("%s: %s (%d)\n", render(c), res, kill)
 	}
 }
 
