@@ -73,12 +73,6 @@ func main() {
 	keyMap := readKeyMap("config")
 	chords := readDict("dict")
 
-	for k, v := range chords.Predecessors {
-		if v.Value == "have" {
-			fmt.Printf("have %b\n", k)
-		}
-	}
-
 	prev := ring.New(20)
 	for {
 		req := <-output
@@ -96,7 +90,7 @@ func main() {
 			prev.Value = c
 			prev = prev.Next()
 			res, kill := lookup(chords, prev, -1)
-			fmt.Printf("%b: %s (%d)\n", c, res, kill)
+			fmt.Printf("%s: %s (%d)\n", render(c), res, kill)
 			if false {
 				prev.Do(func(x interface{}) {
 					fmt.Printf("%b, ", x)
