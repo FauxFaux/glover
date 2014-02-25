@@ -39,6 +39,7 @@ var one = map[string]string{
 }
 
 const S = Chord(2)
+const T = Chord(4)
 const SR = Chord(128 + 2)
 const KWRES = Chord(525480)
 const RAT = Chord(262528)
@@ -76,6 +77,18 @@ func TestLookup(t *testing.T) {
 	r.Value = RAT
 	r = r.Next()
 	assertEquals(t, "separate", assertKill(t, 1, out, r))
+}
+
+func TestMistranslate(t *testing.T) {
+	out := load(one)
+	r := ring.New(20)
+	for i := 0; i < 10; i++ {
+		r.Value = SR; r = r.Next()
+	}
+
+	r.Value = T; r = r.Next()
+
+	assertEquals(t, "T", assertKill(t, 0, out, r))
 }
 
 func TestJodieFoster(t *testing.T) {
