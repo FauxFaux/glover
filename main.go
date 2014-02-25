@@ -74,6 +74,7 @@ func main() {
 	chords := readDict("dict")
 
 	prevChords := ring.New(20)
+	prevOutput := ring.New(20)
 	for {
 		req := <-output
 		// this cannot use range as it is not utf-8
@@ -92,6 +93,12 @@ func main() {
 		prevChords.Value = c
 		prevChords = prevChords.Next()
 		res, kill := lookup(chords, prevChords, -1)
+		for i := 0; i < kill; i++ {
+			prevOutput = prevOutput.Prev()
+			fmt.Printf("kill %s\n", prevOutput.Value)
+		}
+		prevOutput.Value = res
+		prevOutput = prevOutput.Next()
 		fmt.Printf("%s: %s (%d)\n", render(c), res, kill)
 	}
 }
