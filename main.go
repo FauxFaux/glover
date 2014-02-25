@@ -95,7 +95,8 @@ func main() {
 		if 0 != c {
 			prev.Value = c
 			prev = prev.Next()
-			fmt.Printf("%b: %s\n", c, lookup(chords, prev))
+			res, kill := lookup(chords, prev, -1)
+			fmt.Printf("%b: %s (%d)\n", c, res, kill)
 			if false {
 				prev.Do(func(x interface{}) {
 					fmt.Printf("%b, ", x)

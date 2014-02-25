@@ -92,28 +92,28 @@ func render(ch Chord) string {
 	return s
 }
 
-func lookup(chords Sequence, r *ring.Ring) (prop string) {
+func lookup(chords Sequence, r *ring.Ring, depth int) (string, int) {
 	r = r.Prev()
 
 	// if there's no more inputs in the buffer,
 	// and we got here, this must be what we want
 	if nil == r.Value {
-		return chords.Value
+		return chords.Value, depth
 	}
 	var ch Chord = r.Value.(Chord)
 
 	// if we can go deeper, we should
 	cand := chords.Predecessors[ch]
 	if nil != cand {
-		return lookup(*cand, r)
+		return lookup(*cand, r, depth + 1)
 	}
 
 	// if we can't go deeper, and we have something, it's right
 	if "" != chords.Value {
-		return chords.Value
+		return chords.Value, depth
 	}
 
-	return render(ch)
+	return render(ch), 0
 }
 
 func readDict(name string) Sequence {
